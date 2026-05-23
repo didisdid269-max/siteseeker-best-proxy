@@ -1,7 +1,4 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import { useState } from "react";
-
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -41,17 +38,22 @@ export default function SearchDashboard() {
     setSearched(false);
 
     try {
-      const res = await db.functions.invoke("secroxySearch", {
-        query: query.trim(),
-        engine,
-        safe: safeSearch ? "on" : "off",
+      const res = await fetch("/api/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: query.trim(),
+          engine,
+          safe: safeSearch ? "on" : "off",
+        }),
       });
+      const data = await res.json();
 
-      if (res.data?.error) {
-        setError(res.data.error);
+      if (data?.error) {
+        setError(data.error);
       } else {
-        setResults(res.data?.results || []);
-        setMeta(res.data);
+        setResults(data?.results || []);
+        setMeta(data);
       }
     } catch (err) {
       setError(err.message || "Search failed. Please try again.");
